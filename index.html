@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buko Juice ni Rivera - Online Food Ordering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .tropical-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+        .tropical-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 219, 226, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 183, 197, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+        .coconut-pattern {
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .floating-elements {
+            position: fixed;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+            top: 0;
+            left: 0;
+        }
+        .floating-coconut {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        .floating-coconut:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-coconut:nth-child(2) { top: 20%; right: 15%; animation-delay: 2s; }
+        .floating-coconut:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 4s; }
+        .floating-coconut:nth-child(4) { bottom: 10%; right: 10%; animation-delay: 1s; }
+        .floating-coconut:nth-child(5) { top: 50%; left: 5%; animation-delay: 3s; }
+        .floating-coconut:nth-child(6) { top: 70%; right: 25%; animation-delay: 5s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .section-bg {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            margin: 20px 0;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            height: 4px;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        .order-status-active {
+            background: #10b981;
+            color: white;
+        }
+        .order-status-completed {
+            background: #6b7280;
+            color: white;
+        }
+        .order-status-pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .menu-item-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .category-btn.active {
+            background: #10b981;
+            color: white;
+        }
+    </style>
+</head>
+<body class="tropical-bg coconut-pattern min-h-screen">
+    <!-- Floating Background Elements -->
+    <div class="floating-elements">
+        <div class="floating-coconut">🥥</div>
+        <div class="floating-coconut">🌴</div>
+        <div class="floating-coconut">🥥</div>
+        <div class="floating-coconut">🌺</div>
+        <div class="floating-coconut">🥥</div>
+        <div class="floating-coconut">🌴</div>
+    </div>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login to Buko Juice ni Rivera</h3>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="loginEmail" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="loginPassword" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label for="loginRole" class="block text-sm font-medium text-gray-700 mb-1">Login As</label>
+                        <select id="loginRole" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Select Role</option>
+                            <option value="customer">Customer</option>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-4 mt-6">
+                    <button type="button" onclick="closeLoginModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Login</button>
+                </div>
+            </form>
+            <div class="mt-4 text-center text-sm text-gray-600">
+                Don't have an account? <button onclick="showSignupModal()" class="text-green-600 hover:text-green-700">Sign up</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Create an Account</h3>
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label for="signupName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="signupName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Your Name">
+                    </div>
+                    <div>
+                        <label for="signupEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="signupEmail" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label for="signupPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input type="tel" id="signupPhone" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="09123456789">
+                    </div>
+                    <div>
+                        <label for="signupPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="signupPassword" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label for="signupRole" class="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                        <select id="signupRole" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="customer">Customer</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-4 mt-6">
+                    <button type="button" onclick="closeSignupModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Sign Up</button>
+                </div>
+            </form>
+            <div class="mt-4 text-center text-sm text-gray-600">
+                Already have an account? <button onclick="showLoginModal()" class="text-green-600 hover:text-green-700">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="glass-effect text-gray-800 shadow-lg border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center">
+                        <img src="https://scontent.fcrk4-1.fna.fbcdn.net/v/t1.15752-9/566501809_4167962043531202_7874560291604828234_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=108&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFx_qrykR12w5DYFXkACAZnEkYL9h9fpo0SRgv2H1-mjXseXPNNBu_iMj6aHpsh-ItsBJDyU9ctCFAYkTqLNLQ2&_nc_ohc=IASghS4c8NYQ7kNvwGxXmnf&_nc_oc=AdkUa8yxTzuLIgINjPlgyArVDA0rxfQslHgvfpn-flebHablqxqD0A-okzJdop8DjXU&_nc_ad=z-m&_nc_cid=1066&_nc_zt=23&_nc_ht=scontent.fcrk4-1.fna&oh=03_Q7cD3gHF5H0ZPA1khFs0Ze-AAZ0NXZMzEuU_7NCaMw-E5C7QkA&oe=69298C60" alt="Buko Juice Logo" class="w-6 h-6 sm:w-8 sm:h-8 rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="text-green-600 font-bold text-sm sm:text-lg hidden">BJR</div>
+                    </div>
+                    <h1 class="text-lg sm:text-xl font-bold">Buko Juice ni Rivera</h1>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden lg:flex items-center space-x-4">
+                    <button onclick="showSection('menu')" class="hover:bg-white/20 px-3 py-2 rounded transition-colors">Menu</button>
+                    <button onclick="showSection('favorites')" class="hover:bg-white/20 px-3 py-2 rounded transition-colors">Favorites ❤️</button>
+                    <button onclick="showSection('about')" class="hover:bg-white/20 px-3 py-2 rounded transition-colors">About Us</button>
+                    <button onclick="showSection('orders')" class="hover:bg-white/20 px-3 py-2 rounded transition-colors">My Orders</button>
+                    <button id="adminBtn" onclick="showSection('admin')" class="hover:bg-white/20 px-3 py-2 rounded transition-colors hidden">Admin</button>
+                    <div class="relative">
+                        <button onclick="toggleCart()" class="hover:bg-white/20 px-3 py-2 rounded flex items-center space-x-1 transition-colors">
+                            <span>🛒</span>
+                            <span id="cartCount" class="bg-green-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">0</span>
+                        </button>
+                    </div>
+
+                    <div class="text-sm">
+                        <span class="text-gray-600">Points: </span>
+                        <span class="font-bold text-green-600" id="userPoints">0</span>
+                    </div>
+                    
+                    <!-- Login/Logout Button -->
+                    <div id="authButtons">
+                        <button onclick="showLoginModal()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">Login</button>
+                    </div>
+                </div>
+
+                <!-- Mobile Navigation -->
+                <div class="lg:hidden flex items-center space-x-2">
+                    <button onclick="toggleCart()" class="hover:bg-white/20 p-2 rounded flex items-center space-x-1 transition-colors">
+                        <span class="text-lg">🛒</span>
+                        <span id="cartCountMobile" class="bg-green-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">0</span>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="hover:bg-white/20 p-2 rounded transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileMenu" class="lg:hidden hidden bg-white/90 backdrop-blur-md border-t border-white/20">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <button onclick="showSection('menu'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded hover:bg-white/30 transition-colors text-gray-800">Menu</button>
+                    <button onclick="showSection('favorites'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded hover:bg-white/30 transition-colors text-gray-800">Favorites ❤️</button>
+                    <button onclick="showSection('about'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded hover:bg-white/30 transition-colors text-gray-800">About Us</button>
+                    <button onclick="showSection('orders'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded hover:bg-white/30 transition-colors text-gray-800">My Orders</button>
+                    <button id="mobileAdminBtn" onclick="showSection('admin'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded hover:bg-white/30 transition-colors text-gray-800 hidden">Admin</button>
+                    <div class="pt-2 border-t">
+                        <button id="mobileAuthBtn" onclick="showLoginModal(); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded hover:bg-white/30 transition-colors text-gray-800">Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Section -->
+    <div id="menuSection" class="section max-w-7xl mx-auto px-4 py-8">
+        <div class="section-bg">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Our Fresh Menu</h2>
+            
+            <!-- Categories -->
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button onclick="filterMenu('all')" class="category-btn bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors active">All Items</button>
+                <button onclick="filterMenu('drinks')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition-colors">Drinks</button>
+                <button onclick="filterMenu('desserts')" class="category-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-300 transition-colors">Desserts</button>
+            </div>
+
+            <!-- Menu Items -->
+            <div id="menuItems" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Menu items will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Favorites Section -->
+    <div id="favoritesSection" class="section hidden max-w-7xl mx-auto px-4 py-8">
+        <div class="section-bg">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Your Favorites ❤️</h2>
+            <div id="favoriteItems" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Favorite items will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- About Us Section -->
+    <div id="aboutSection" class="section hidden max-w-7xl mx-auto px-4 py-8">
+        <div class="section-bg">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">About Buko Juice ni Rivera</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Bringing you the freshest coconut experience with authentic Filipino flavors and premium quality ingredients.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                <!-- Mission -->
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">🎯</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Our Mission</h3>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed text-center">
+                        To provide our customers with the freshest, most authentic coconut-based beverages and treats while promoting healthy living and supporting local coconut farmers. We are committed to delivering exceptional quality, outstanding service, and creating memorable experiences that bring the tropical taste of the Philippines to every sip.
+                    </p>
+                </div>
+
+                <!-- Vision -->
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">👁️</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Our Vision</h3>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed text-center">
+                        To become the leading coconut beverage brand that celebrates Filipino heritage while expanding globally. We envision a future where Buko Juice is synonymous with quality, authenticity, and sustainability, inspiring healthier lifestyle choices and connecting communities through the natural goodness of coconuts.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Values Section -->
+            <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-8 mb-12">
+                <h3 class="text-2xl font-bold text-gray-800 text-center mb-8">Our Core Values</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-white text-xl">🌱</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Freshness</h4>
+                        <p class="text-sm text-gray-600">We source only the freshest coconuts and prepare everything daily to ensure maximum quality and taste.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-white text-xl">🤝</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Community</h4>
+                        <p class="text-sm text-gray-600">Supporting local farmers and building strong relationships with our customers and community partners.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-white text-xl">⭐</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Excellence</h4>
+                        <p class="text-sm text-gray-600">Committed to delivering exceptional products and service that exceed customer expectations every time.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Story Section -->
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-gray-800 text-center mb-6">Our Story</h3>
+                <div class="max-w-4xl mx-auto">
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        Founded with a passion for authentic Filipino flavors, Buko Juice began as a small family business dedicated to sharing the natural goodness of fresh coconuts. Our journey started when we recognized the need for healthy, refreshing beverages that capture the essence of tropical Philippines.
+                    </p>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        What sets us apart is our commitment to authenticity and quality. Every coconut is carefully selected, and every product is crafted with traditional methods passed down through generations. We believe that the best flavors come from the finest ingredients and genuine care.
+                    </p>
+                    <p class="text-gray-600 leading-relaxed">
+                        Today, we continue to grow while staying true to our roots - providing customers with an authentic taste of the Philippines, one coconut at a time. Join us in celebrating the natural sweetness and health benefits that only fresh buko can provide.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div id="ordersSection" class="section hidden max-w-7xl mx-auto px-4 py-8">
+        <div class="section-bg">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">My Orders</h2>
+            <div id="ordersList" class="space-y-4">
+                <!-- Orders will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Section -->
+    <div id="adminSection" class="section hidden max-w-7xl mx-auto px-4 py-8">
+        <div class="section-bg">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Enhanced Admin Dashboard</h2>
+            
+            <!-- Analytics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Today's Sales</h3>
+                    <p class="text-3xl font-bold" id="todaySales">₱0</p>
+                    <p class="text-sm opacity-80">+0% from yesterday</p>
+                </div>
+                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Total Orders</h3>
+                    <p class="text-3xl font-bold" id="totalOrders">0</p>
+                    <p class="text-sm opacity-80">0 pending delivery</p>
+                </div>
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Active Customers</h3>
+                    <p class="text-3xl font-bold" id="activeCustomers">0</p>
+                    <p class="text-sm opacity-80">+0 new this week</p>
+                </div>
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Avg. Order Value</h3>
+                    <p class="text-3xl font-bold" id="avgOrderValue">₱0</p>
+                    <p class="text-sm opacity-80">+₱0 from last week</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Order Management -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-white/20">
+                    <h3 class="text-xl font-semibold mb-4">Order Management</h3>
+                    <div id="adminOrders" class="space-y-4 max-h-96 overflow-y-auto">
+                        <!-- Admin orders will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Inventory Management -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-white/20">
+                    <h3 class="text-xl font-semibold mb-4">Inventory Management</h3>
+                    <div id="inventoryList" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Inventory will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Sales Chart -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-white/20 lg:col-span-2">
+                    <h3 class="text-xl font-semibold mb-4">Sales Analytics</h3>
+                    <canvas id="salesChart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- User Management -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-white/20 lg:col-span-2">
+                    <h3 class="text-xl font-semibold mb-4">User Management</h3>
+
+                    <div class="mb-4">
+                        <button onclick="showAddUserForm()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add New User</button>
+                    </div>
+                    <div id="usersList" class="space-y-3 max-h-64 overflow-y-auto">
+                        <!-- Users will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Sidebar -->
+    <div id="cartSidebar" class="fixed right-0 top-0 h-full w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50">
+        <div class="p-4 sm:p-6 border-b">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg sm:text-xl font-semibold">Shopping Cart</h3>
+                <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+        </div>
+        <div id="cartItems" class="p-4 sm:p-6 flex-1 overflow-y-auto" style="height: calc(100% - 280px);">
+            <!-- Cart items will be populated by JavaScript -->
+        </div>
+
+        <div class="p-4 sm:p-6 border-t bg-gray-50">
+            <!-- Promo Code Section -->
+            <div class="mb-4">
+                <button onclick="showPromoModal()" class="w-full text-left text-green-600 hover:text-green-700 text-sm font-medium mb-2">
+                    🎟️ Apply Promo Code
+                </button>
+                <div id="appliedPromo" class="hidden bg-green-50 border border-green-200 rounded p-2 text-sm">
+                    <!-- Applied promo will show here -->
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="space-y-2 mb-4 text-sm">
+                <div class="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span id="cartSubtotal">₱0.00</span>
+                </div>
+                <div class="flex justify-between" id="promoDiscount" style="display: none;">
+                    <span class="text-green-600">Discount:</span>
+                    <span class="text-green-600" id="discountAmount">-₱0.00</span>
+                </div>
+                <div class="flex justify-between" id="deliveryFeeRow" style="display: none;">
+                    <span>Delivery Fee:</span>
+                    <span id="deliveryFeeAmount">₱0.00</span>
+                </div>
+                <div class="border-t pt-2 flex justify-between items-center">
+                    <span class="text-base sm:text-lg font-semibold">Total:</span>
+                    <span id="cartTotal" class="text-lg sm:text-xl font-bold text-green-600">₱0.00</span>
+                </div>
+            </div>
+            
+            <!-- Loyalty Points -->
+            <div class="mb-4 text-xs text-gray-600 text-center">
+                💎 You have <span id="cartLoyaltyPoints">0</span> loyalty points
+            </div>
+            
+            <button onclick="proceedToCheckout()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Item Customization Modal -->
+    <div id="itemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-4 sm:p-6 lg:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl sm:text-2xl font-semibold" id="modalItemName">Customize Item</h3>
+                <button onclick="closeItemModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <div id="modalItemContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            
+            <div class="flex space-x-4 mt-6">
+                <button onclick="closeItemModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                <button onclick="addCustomizedItem()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700" id="addToCartBtn">Add to Cart - ₱0</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo Code Modal -->
+    <div id="promoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-4 sm:p-6 lg:p-8 max-w-md w-full">
+            <h3 class="text-xl font-semibold mb-4">Apply Promo Code</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="promoCode" class="block text-sm font-medium text-gray-700 mb-1">Enter Promo Code</label>
+                    <input type="text" id="promoCode" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="e.g., FIRST20">
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium mb-2">Available Promotions:</h4>
+                    <div id="availablePromos" class="space-y-2">
+                        <!-- Promos will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-4 mt-6">
+                <button onclick="closePromoModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                <button onclick="applyPromoCode()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Apply Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Tracking Modal -->
+    <div id="trackingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-4 sm:p-6 lg:p-8 max-w-lg w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">Order Tracking</h3>
+                <button onclick="closeTrackingModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div id="trackingContent">
+                <!-- Tracking content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-4 sm:p-6 lg:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Enhanced Checkout</h3>
+            <form id="checkoutForm" onsubmit="processPayment(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="customerName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label for="customerPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input type="tel" id="customerPhone" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="customerAddress" class="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+                        <textarea id="customerAddress" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label for="deliveryZone" class="block text-sm font-medium text-gray-700 mb-1">Delivery Zone</label>
+                        <select id="deliveryZone" required onchange="updateDeliveryFee()" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Select Delivery Zone</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="deliveryTime" class="block text-sm font-medium text-gray-700 mb-1">Preferred Delivery Time</label>
+                        <select id="deliveryTime" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="asap">As Soon As Possible</option>
+                            <option value="1hour">In 1 Hour</option>
+                            <option value="2hours">In 2 Hours</option>
+                            <option value="3hours">In 3 Hours</option>
+                            <option value="tomorrow">Tomorrow Morning</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="specialInstructions" class="block text-sm font-medium text-gray-700 mb-1">Special Instructions (Optional)</label>
+                        <textarea id="specialInstructions" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" rows="2" placeholder="Any special requests or delivery notes..."></textarea>
+                    </div>
+                    <div>
+                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                        <select id="paymentMethod" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">Select Payment Method</option>
+                            <option value="cash">Cash on Delivery</option>
+                            <option value="gcash">GCash</option>
+                            <option value="paymaya">PayMaya</option>
+                            <option value="card">Credit/Debit Card</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Order Summary in Checkout -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium mb-3">Order Summary</h4>
+                        <div id="checkoutSummary">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-4 mt-6">
+                    <button type="button" onclick="closeCheckout()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Place Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-4 sm:p-6 lg:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Add New User</h3>
+            <form id="addUserForm" onsubmit="addUser(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label for="newUserName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="newUserName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="newUserEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="newUserEmail" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="newUserPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input type="tel" id="newUserPhone" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label for="newUserRole" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <select id="newUserRole" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="customer">Customer</option>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-4 mt-6">
+                    <button type="button" onclick="closeAddUser()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div class="flex items-center space-x-2">
+            <span>✓</span>
+            <span id="successText">Success!</span>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Sample Data
+        let menuItems = [
+            { 
+                id: 1, 
+                name: 'Fresh Buko Juice', 
+                price: { small: 35, medium: 45, large: 55 }, 
+                category: 'drinks', 
+                image: '🥥',
+                imageUrl: 'https://tandobeverage.com/wp-content/uploads/2021/01/coconut-water-1.jpg', 
+                description: 'Fresh coconut water with tender meat',
+                stock: 25,
+                sizes: ['small', 'medium', 'large'],
+                addOns: [
+                    { name: 'Extra Coconut Meat', price: 10 },
+                    { name: 'Ice Cream Scoop', price: 15 }
+                ]
+            },
+            { 
+                id: 2, 
+                name: 'Buko Shake', 
+                price: { small: 55, medium: 65, large: 75 }, 
+                category: 'drinks', 
+                 image: '🥤',
+                imageUrl:'https://media.assettype.com/sunstar%2F2024-03%2F4c0a1890-e6f6-4811-960d-2bc7e7a54afd%2Ff2.jpg?w=640&auto=format%2Ccompress://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_1sr6uciaA_o-2IG12-Q9hGTrmuEWlRIzYQ&s',
+                description: 'Creamy coconut shake with ice cream',
+                stock: 18,
+                sizes: ['small', 'medium', 'large'],
+                addOns: [
+                    { name: 'Whipped Cream', price: 12 },
+                    { name: 'Extra Thick', price: 8 }
+                ]
+            },
+            { 
+                id: 3, 
+                name: 'Buko Pie', 
+                price: { slice: 120, whole: 450 }, 
+                category: 'desserts', 
+                image: '🥧',
+                imageUrl: 'https://www.tasteofhome.com/wp-content/uploads/2025/01/Favorite-Coconut-Meringue-Pie_EXPS_FT25_18335_JR_0109_1.jpg', 
+                description: 'Traditional Filipino coconut pie',
+                stock: 8,
+                sizes: ['slice', 'whole'],
+                addOns: [
+                    { name: 'Vanilla Ice Cream', price: 20 },
+                    { name: 'Caramel Drizzle', price: 15 }
+                ]
+            },
+            { 
+                id: 6, 
+                name: 'Buko Salad', 
+                price: { regular: 55, family: 95 }, 
+                category: 'desserts', 
+                image: '🥗',
+                imageUrl:'https://www.kawalingpinoy.com/wp-content/uploads/2018/11/filipino-buko-pandan-salad-1.jpg', 
+                description: 'Sweet pandan coconut fruit salad',
+                stock: 12,
+                sizes: ['regular', 'family'],
+                addOns: [
+                    { name: 'Extra Fruits', price: 18 },
+                    { name: 'Condensed Milk', price: 10 }
+                ]
+            }
+        ];
+
+        let cart = [];
+        let orders = [];
+        let favorites = [];
+        let promotions = [
+            { code: 'FIRST20', discount: 20, type: 'percentage', minOrder: 100, description: 'First-time customer 20% off' },
+            { code: 'BUKO50', discount: 50, type: 'fixed', minOrder: 200, description: '₱50 off orders above ₱200' }
+        ];
+        let deliveryZones = [
+            { name: 'Zone 1 (City Center)', fee: 25, estimatedTime: '20-30 mins' },
+            { name: 'Zone 2 (Nearby Areas)', fee: 35, estimatedTime: '30-45 mins' },
+            { name: 'Zone 3 (Outer Areas)', fee: 50, estimatedTime: '45-60 mins' }
+        ];
+        let users = [
+            { 
+                id: 1, 
+                name: 'Justin Rivera', 
+                email: 'kjmasarap@gmail.com', 
+                phone: '09701314691', 
+                role: 'customer', 
+                status: 'active',
+                loyaltyPoints: 150,
+                totalOrders: 8,
+                favoriteItems: [1, 3],
+                password: 'password123'
+            },
+            { 
+                id: 2, 
+                name: 'Faith Alonzo', 
+                email: 'Faithmasarap@gmail.com', 
+                phone: '09987654321', 
+                role: 'admin', 
+                status: 'active',
+                loyaltyPoints: 0,
+                totalOrders: 0,
+                favoriteItems: [],
+                password: 'admin123'
+            },
+            { 
+                id: 3, 
+                name: 'John Staff', 
+                email: 'staff@example.com', 
+                phone: '09123456789', 
+                role: 'staff', 
+                status: 'active',
+                loyaltyPoints: 0,
+                totalOrders: 0,
+                favoriteItems: [],
+                password: 'staff123'
+            }
+        ];
+        let currentSection = 'menu';
+        let orderIdCounter = 1000;
+        let userIdCounter = 4;
+        let currentUser = null; // Start with no user logged in
+        let appliedPromo = null;
+        let selectedDeliveryZone = null;
+        let scheduledDelivery = null;
+        let currentItemModal = null;
+        let salesChart = null;
+
+        // Initialize the app
+        function init() {
+            displayMenuItems();
+            updateCartDisplay();
+            displayOrders();
+            displayAdminOrders();
+            displayUsers();
+            displayFavorites();
+            updateUserPoints();
+            populateDeliveryZones();
+            displayInventory();
+            initSalesChart();
+            updateAuthUI();
+        }
+
+        // Login/Signup functionality
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginModal').classList.add('flex');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('flex');
+        }
+
+        function showSignupModal() {
+            closeLoginModal();
+            document.getElementById('signupModal').classList.remove('hidden');
+            document.getElementById('signupModal').classList.add('flex');
+        }
+
+        function closeSignupModal() {
+            document.getElementById('signupModal').classList.add('hidden');
+            document.getElementById('signupModal').classList.remove('flex');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const role = document.getElementById('loginRole').value;
+
+            const user = users.find(u => u.email === email && u.password === password && u.role === role);
+            
+            if (user) {
+                currentUser = user;
+                closeLoginModal();
+                updateAuthUI();
+                showSuccess(`Welcome back, ${user.name}!`);
+                // Reset form
+                document.getElementById('loginForm').reset();
+            } else {
+                showSuccess('Invalid credentials or role. Please try again.');
+            }
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            const role = document.getElementById('signupRole').value;
+
+            // Check if email already exists
+            if (users.find(u => u.email === email)) {
+                showSuccess('Email already exists. Please use a different email.');
+                return;
+            }
+
+            const newUser = {
+                id: userIdCounter++,
+                name: name,
+                email: email,
+                phone: phone,
+                role: role,
+                status: 'active',
+                loyaltyPoints: 0,
+                totalOrders: 0,
+                favoriteItems: [],
+                password: password
+            };
+
+            users.push(newUser);
+            currentUser = newUser;
+            closeSignupModal();
+            updateAuthUI();
+            showSuccess(`Account created successfully! Welcome, ${name}!`);
+            // Reset form
+            document.getElementById('signupForm').reset();
+        }
+
+        function logout() {
+            currentUser = null;
+            updateAuthUI();
+            showSuccess('You have been logged out.');
+            // Clear cart and reset to default state
+            cart = [];
+            updateCartDisplay();
+            showSection('menu');
+        }
+
+        function updateAuthUI() {
+            const authButtons = document.getElementById('authButtons');
+            const mobileAuthBtn = document.getElementById('mobileAuthBtn');
+            const adminBtn = document.getElementById('adminBtn');
+            const mobileAdminBtn = document.getElementById('mobileAdminBtn');
+
+            if (currentUser) {
+                // User is logged in
+                authButtons.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm">Hello, ${currentUser.name}</span>
+                        <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">Logout</button>
+                    </div>
+                `;
+                mobileAuthBtn.innerHTML = `Logout (${currentUser.name})`;
+                mobileAuthBtn.onclick = logout;
+
+                // Show/hide admin button based on role
+                if (currentUser.role === 'admin' || currentUser.role === 'staff') {
+                    adminBtn.classList.remove('hidden');
+                    mobileAdminBtn.classList.remove('hidden');
+                } else {
+                    adminBtn.classList.add('hidden');
+                    mobileAdminBtn.classList.add('hidden');
+                }
+            } else {
+                // User is not logged in
+                authButtons.innerHTML = `
+                    <button onclick="showLoginModal()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">Login</button>
+                `;
+                mobileAuthBtn.innerHTML = 'Login';
+                mobileAuthBtn.onclick = function() { showLoginModal(); toggleMobileMenu(); };
+                
+                // Hide admin buttons
+                adminBtn.classList.add('hidden');
+                mobileAdminBtn.classList.add('hidden');
+            }
+        }
+
+        // Section navigation
+        function showSection(section) {
+            // Check if user needs to be logged in for certain sections
+            if ((section === 'orders' || section === 'favorites') && !currentUser) {
+                showSuccess('Please log in to access this section.');
+                showLoginModal();
+                return;
+            }
+
+            // Check if user has permission for admin section
+            if (section === 'admin' && (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff'))) {
+                showSuccess('You do not have permission to access the admin section.');
+                return;
+            }
+
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.getElementById(section + 'Section').classList.add('fade-in');
+            currentSection = section;
+
+            if (section === 'orders') {
+                displayOrders();
+            } else if (section === 'admin') {
+                displayAdminOrders();
+                displayUsers();
+                displayInventory();
+                updateAdminStats();
+            } else if (section === 'favorites') {
+                displayFavorites();
+            }
+        }
+
+        function filterMenu(category) {
+            // Update active category button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-green-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            const activeBtn = event.target;
+            activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            activeBtn.classList.add('active', 'bg-green-600', 'text-white');
+            
+            displayMenuItems(category);
+        }
+
+        function displayMenuItems(filter = 'all') {
+            const container = document.getElementById('menuItems');
+            const filtered = filter === 'all' ? menuItems : menuItems.filter(item => item.category === filter);
+            
+            container.innerHTML = filtered.map(item => {
+                const isFavorite = currentUser ? currentUser.favoriteItems.includes(item.id) : false;
+                const priceRange = Object.values(item.price);
+                const minPrice = Math.min(...priceRange);
+                const maxPrice = Math.max(...priceRange);
+                const priceDisplay = minPrice === maxPrice ? `₱${minPrice}` : `₱${minPrice} - ₱${maxPrice}`;
+                
+                return `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="p-6">
+                        <!-- Product Image -->
+                        <img src="${item.imageUrl}" alt="${item.name}" class="menu-item-image mb-4">
+                        
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-4xl">${item.image}</div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="toggleFavorite(${item.id})" class="text-xl ${isFavorite ? 'text-red-500' : 'text-gray-300'} hover:text-red-500">
+                                    ${isFavorite ? '❤️' : '🤍'}
+                                </button>
+                                <span class="text-xs px-2 py-1 rounded-full ${item.stock > 10 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${item.stock} left
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-2">${item.name}</h3>
+                        <p class="text-gray-600 mb-4">${item.description}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-green-600">${priceDisplay}</span>
+                            <button onclick="showItemModal(${item.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                Customize & Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Item customization modal
+        function showItemModal(itemId) {
+            if (!currentUser) {
+                showSuccess('Please log in to add items to cart.');
+                showLoginModal();
+                return;
+            }
+
+            const item = menuItems.find(i => i.id === itemId);
+            currentItemModal = { ...item, selectedSize: item.sizes[0], selectedAddOns: [], specialInstructions: '' };
+            
+            document.getElementById('modalItemName').textContent = item.name;
+            
+            const content = `
+                <div class="space-y-4">
+                    <div class="text-center">
+                        <div class="text-6xl mb-2">${item.image}</div>
+                        <p class="text-gray-600">${item.description}</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-2">Size:</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${item.sizes.map(size => `
+                                <button onclick="selectSize('${size}')" class="size-btn border-2 border-gray-300 rounded-lg p-3 text-center hover:border-green-500 transition-colors" data-size="${size}">
+                                    <div class="font-medium capitalize">${size}</div>
+                                    <div class="text-green-600 font-bold">₱${item.price[size]}</div>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-2">Add-ons:</h4>
+                        <div class="space-y-2">
+                            ${item.addOns.map((addon, index) => `
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" onchange="toggleAddOn(${index})" class="rounded">
+                                    <span class="flex-1">${addon.name}</span>
+                                    <span class="text-green-600 font-medium">+₱${addon.price}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="modalSpecialInstructions" class="block font-semibold mb-2">Special Instructions:</label>
+                        <textarea id="modalSpecialInstructions" onchange="updateSpecialInstructions()" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="Any special requests..."></textarea>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalItemContent').innerHTML = content;
+            selectSize(item.sizes[0]); // Select first size by default
+            updateModalPrice();
+            
+            document.getElementById('itemModal').classList.remove('hidden');
+            document.getElementById('itemModal').classList.add('flex');
+        }
+
+        function selectSize(size) {
+            currentItemModal.selectedSize = size;
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('border-green-500', 'bg-green-50');
+                btn.classList.add('border-gray-300');
+            });
+            document.querySelector(`[data-size="${size}"]`).classList.remove('border-gray-300');
+            document.querySelector(`[data-size="${size}"]`).classList.add('border-green-500', 'bg-green-50');
+            updateModalPrice();
+        }
+
+        function toggleAddOn(index) {
+            const addon = currentItemModal.addOns[index];
+            const existingIndex = currentItemModal.selectedAddOns.findIndex(a => a.name === addon.name);
+            
+            if (existingIndex > -1) {
+                currentItemModal.selectedAddOns.splice(existingIndex, 1);
+            } else {
+                currentItemModal.selectedAddOns.push(addon);
+            }
+            updateModalPrice();
+        }
+
+        function updateSpecialInstructions() {
+            currentItemModal.specialInstructions = document.getElementById('modalSpecialInstructions').value;
+        }
+
+        function updateModalPrice() {
+            const basePrice = currentItemModal.price[currentItemModal.selectedSize];
+            const addOnPrice = currentItemModal.selectedAddOns.reduce((sum, addon) => sum + addon.price, 0);
+            const totalPrice = basePrice + addOnPrice;
+            
+            document.getElementById('addToCartBtn').textContent = `Add to Cart - ₱${totalPrice}`;
+        }
+
+        function addCustomizedItem() {
+            const basePrice = currentItemModal.price[currentItemModal.selectedSize];
+            const addOnPrice = currentItemModal.selectedAddOns.reduce((sum, addon) => sum + addon.price, 0);
+            const totalPrice = basePrice + addOnPrice;
+            
+            const customizedItem = {
+                id: currentItemModal.id,
+                name: currentItemModal.name,
+                price: totalPrice,
+                image: currentItemModal.image,
+                size: currentItemModal.selectedSize,
+                addOns: [...currentItemModal.selectedAddOns],
+                specialInstructions: currentItemModal.specialInstructions,
+                quantity: 1
+            };
+            
+            const existingItem = cart.find(item => 
+                item.id === customizedItem.id && 
+                item.size === customizedItem.size && 
+                JSON.stringify(item.addOns) === JSON.stringify(customizedItem.addOns)
+            );
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push(customizedItem);
+            }
+            
+            // Update stock
+            const menuItem = menuItems.find(i => i.id === currentItemModal.id);
+            menuItem.stock -= 1;
+            
+            updateCartDisplay();
+            closeItemModal();
+            showSuccess('Item added to cart!');
+            displayMenuItems(); // Refresh to show updated stock
+        }
+
+        function closeItemModal() {
+            document.getElementById('itemModal').classList.add('hidden');
+            document.getElementById('itemModal').classList.remove('flex');
+            currentItemModal = null;
+        }
+
+        // Favorites functionality
+        function toggleFavorite(itemId) {
+            if (!currentUser) {
+                showSuccess('Please log in to add favorites.');
+                showLoginModal();
+                return;
+            }
+
+            const index = currentUser.favoriteItems.indexOf(itemId);
+            if (index > -1) {
+                currentUser.favoriteItems.splice(index, 1);
+                showSuccess('Removed from favorites');
+            } else {
+                currentUser.favoriteItems.push(itemId);
+                showSuccess('Added to favorites ❤️');
+            }
+            
+            displayMenuItems();
+            displayFavorites();
+        }
+
+        function displayFavorites() {
+            const container = document.getElementById('favoriteItems');
+            
+            if (!currentUser || currentUser.favoriteItems.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center col-span-full">No favorite items yet. Add some items to your favorites!</p>';
+                return;
+            }
+            
+            const favoriteItems = menuItems.filter(item => currentUser.favoriteItems.includes(item.id));
+            
+            container.innerHTML = favoriteItems.map(item => {
+                const priceRange = Object.values(item.price);
+                const minPrice = Math.min(...priceRange);
+                const maxPrice = Math.max(...priceRange);
+                const priceDisplay = minPrice === maxPrice ? `₱${minPrice}` : `₱${minPrice} - ₱${maxPrice}`;
+                
+                return `
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="p-6">
+                        <img src="${item.imageUrl}" alt="${item.name}" class="menu-item-image mb-4">
+                        
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-4xl">${item.image}</div>
+                            <button onclick="toggleFavorite(${item.id})" class="text-xl text-red-500 hover:text-red-700">
+                                ❤️
+                            </button>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-2">${item.name}</h3>
+                        <p class="text-gray-600 mb-4">${item.description}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-green-600">${priceDisplay}</span>
+                            <button onclick="showItemModal(${item.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                Customize & Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Promo code functionality
+        function showPromoModal() {
+            document.getElementById('promoModal').classList.remove('hidden');
+            document.getElementById('promoModal').classList.add('flex');
+            
+            const promosContainer = document.getElementById('availablePromos');
+            promosContainer.innerHTML = promotions.map(promo => `
+                <div class="text-sm p-2 bg-white rounded border">
+                    <div class="font-medium text-green-600">${promo.code}</div>
+                    <div class="text-gray-600">${promo.description}</div>
+                    <div class="text-xs text-gray-500">Min order: ₱${promo.minOrder}</div>
+                </div>
+            `).join('');
+        }
+
+        function closePromoModal() {
+            document.getElementById('promoModal').classList.add('hidden');
+            document.getElementById('promoModal').classList.remove('flex');
+        }
+
+        function applyPromoCode() {
+            const code = document.getElementById('promoCode').value.toUpperCase();
+            const promo = promotions.find(p => p.code === code);
+            
+            if (!promo) {
+                showSuccess('Invalid promo code!');
+                return;
+            }
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            if (subtotal < promo.minOrder) {
+                showSuccess(`Minimum order of ₱${promo.minOrder} required!`);
+                return;
+            }
+            
+            appliedPromo = promo;
+            updateCartDisplay();
+            closePromoModal();
+            showSuccess(`Promo code applied! ${promo.description}`);
+        }
+
+        // Delivery zone functionality
+        function populateDeliveryZones() {
+            const select = document.getElementById('deliveryZone');
+            select.innerHTML = '<option value="">Select Delivery Zone</option>' + 
+                deliveryZones.map((zone, index) => `
+                    <option value="${index}">${zone.name} - ₱${zone.fee} (${zone.estimatedTime})</option>
+                `).join('');
+        }
+
+        function updateDeliveryFee() {
+            const zoneIndex = document.getElementById('deliveryZone').value;
+            if (zoneIndex !== '') {
+                selectedDeliveryZone = deliveryZones[zoneIndex];
+                updateCartDisplay();
+            }
+        }
+
+        // Enhanced cart functions
+        function updateCartDisplay() {
+            const cartCount = document.getElementById('cartCount');
+            const cartCountMobile = document.getElementById('cartCountMobile');
+            const cartItems = document.getElementById('cartItems');
+            const cartSubtotal = document.getElementById('cartSubtotal');
+            const cartTotal = document.getElementById('cartTotal');
+            const cartLoyaltyPoints = document.getElementById('cartLoyaltyPoints');
+            
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            let discount = 0;
+            if (appliedPromo) {
+                discount = appliedPromo.type === 'percentage' 
+                    ? (subtotal * appliedPromo.discount / 100)
+                    : appliedPromo.discount;
+            }
+            
+            const deliveryFee = selectedDeliveryZone ? selectedDeliveryZone.fee : 0;
+            const total = subtotal - discount + deliveryFee;
+            
+            cartCount.textContent = totalItems;
+            cartCountMobile.textContent = totalItems;
+            cartSubtotal.textContent = `₱${subtotal.toFixed(2)}`;
+            cartTotal.textContent = `₱${total.toFixed(2)}`;
+            cartLoyaltyPoints.textContent = currentUser ? currentUser.loyaltyPoints : 0;
+            
+            // Update promo display
+            if (appliedPromo) {
+                document.getElementById('promoDiscount').style.display = 'flex';
+                document.getElementById('discountAmount').textContent = `-₱${discount.toFixed(2)}`;
+                document.getElementById('appliedPromo').classList.remove('hidden');
+                document.getElementById('appliedPromo').innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-green-700 font-medium">${appliedPromo.code} applied!</span>
+                        <button onclick="removePromo()" class="text-red-500 hover:text-red-700">✕</button>
+                    </div>
+                `;
+            } else {
+                document.getElementById('promoDiscount').style.display = 'none';
+                document.getElementById('appliedPromo').classList.add('hidden');
+            }
+            
+            // Update delivery fee display
+            if (selectedDeliveryZone) {
+                document.getElementById('deliveryFeeRow').style.display = 'flex';
+                document.getElementById('deliveryFeeAmount').textContent = `₱${deliveryFee.toFixed(2)}`;
+            } else {
+                document.getElementById('deliveryFeeRow').style.display = 'none';
+            }
+            
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty</p>';
+            } else {
+                cartItems.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between border-b pb-4 mb-4">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-sm sm:text-base">${item.name}</h4>
+                            <p class="text-xs text-gray-500">Size: ${item.size}</p>
+                            ${item.addOns && item.addOns.length > 0 ? `<p class="text-xs text-gray-500">Add-ons: ${item.addOns.map(a => a.name).join(', ')}</p>` : ''}
+                            <p class="text-green-600 font-bold text-sm sm:text-base">₱${item.price}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateQuantity(${cart.indexOf(item)}, -1)" class="bg-gray-200 text-gray-700 w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-gray-300 text-sm">-</button>
+                            <span class="w-6 sm:w-8 text-center text-sm sm:text-base">${item.quantity}</span>
+                            <button onclick="updateQuantity(${cart.indexOf(item)}, 1)" class="bg-gray-200 text-gray-700 w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-gray-300 text-sm">+</button>
+                            <button onclick="removeFromCart(${cart.indexOf(item)})" class="text-red-500 hover:text-red-700 ml-2 text-sm sm:text-base">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update checkout summary
+            updateCheckoutSummary();
+        }
+
+        function removePromo() {
+            appliedPromo = null;
+            updateCartDisplay();
+            showSuccess('Promo code removed');
+        }
+
+        function updateQuantity(index, change) {
+            if (cart[index]) {
+                cart[index].quantity += change;
+                if (cart[index].quantity <= 0) {
+                    removeFromCart(index);
+                } else {
+                    updateCartDisplay();
+                }
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+
+        function toggleCart() {
+            const sidebar = document.getElementById('cartSidebar');
+            sidebar.classList.toggle('translate-x-full');
+        }
+
+        // Enhanced checkout functions
+        function updateCheckoutSummary() {
+            const container = document.getElementById('checkoutSummary');
+            if (!container) return;
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let discount = 0;
+            if (appliedPromo) {
+                discount = appliedPromo.type === 'percentage' 
+                    ? (subtotal * appliedPromo.discount / 100)
+                    : appliedPromo.discount;
+            }
+            const deliveryFee = selectedDeliveryZone ? selectedDeliveryZone.fee : 0;
+            const total = subtotal - discount + deliveryFee;
+            
+            container.innerHTML = `
+                <div class="space-y-2 text-sm">
+                    ${cart.map(item => `
+                        <div class="flex justify-between">
+                            <span>${item.name} (${item.size}) x${item.quantity}</span>
+                            <span>₱${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <div class="border-t pt-2">
+                        <div class="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>₱${subtotal.toFixed(2)}</span>
+                        </div>
+                        ${appliedPromo ? `
+                            <div class="flex justify-between text-green-600">
+                                <span>Discount (${appliedPromo.code}):</span>
+                                <span>-₱${discount.toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        ${selectedDeliveryZone ? `
+                            <div class="flex justify-between">
+                                <span>Delivery Fee:</span>
+                                <span>₱${deliveryFee.toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="flex justify-between font-bold text-lg border-t pt-2">
+                            <span>Total:</span>
+                            <span>₱${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function proceedToCheckout() {
+            if (!currentUser) {
+                showSuccess('Please log in to proceed to checkout.');
+                showLoginModal();
+                return;
+            }
+
+            if (cart.length === 0) {
+                showSuccess('Your cart is empty!');
+                return;
+            }
+            updateCheckoutSummary();
+            document.getElementById('checkoutModal').classList.remove('hidden');
+            document.getElementById('checkoutModal').classList.add('flex');
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkoutModal').classList.add('hidden');
+            document.getElementById('checkoutModal').classList.remove('flex');
+        }
+
+        function processPayment(event) {
+            event.preventDefault();
+            
+            if (!currentUser) {
+                showSuccess('Please log in to place an order.');
+                return;
+            }
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let discount = 0;
+            if (appliedPromo) {
+                discount = appliedPromo.type === 'percentage' 
+                    ? (subtotal * appliedPromo.discount / 100)
+                    : appliedPromo.discount;
+            }
+            const deliveryFee = selectedDeliveryZone ? selectedDeliveryZone.fee : 0;
+            const total = subtotal - discount + deliveryFee;
+            
+            const orderData = {
+                id: orderIdCounter++,
+                items: [...cart],
+                customer: {
+                    name: document.getElementById('customerName').value,
+                    phone: document.getElementById('customerPhone').value,
+                    address: document.getElementById('customerAddress').value
+                },
+                deliveryZone: selectedDeliveryZone,
+                deliveryTime: document.getElementById('deliveryTime').value,
+                specialInstructions: document.getElementById('specialInstructions').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                subtotal: subtotal,
+                discount: discount,
+                deliveryFee: deliveryFee,
+                total: total,
+                appliedPromo: appliedPromo,
+                status: 'confirmed',
+                orderDate: new Date().toLocaleString(),
+                estimatedDelivery: calculateDeliveryTime(),
+                trackingSteps: [
+                    { step: 'Order Confirmed', completed: true, time: new Date().toLocaleString() },
+                    { step: 'Preparing Order', completed: false, time: null },
+                    { step: 'Out for Delivery', completed: false, time: null },
+                    { step: 'Delivered', completed: false, time: null }
+                ]
+            };
+            
+            orders.push(orderData);
+            
+            // Award loyalty points (1 point per peso spent)
+            currentUser.loyaltyPoints += Math.floor(total);
+            currentUser.totalOrders += 1;
+            updateUserPoints();
+            
+            // Clear cart and reset
+            cart = [];
+            appliedPromo = null;
+            selectedDeliveryZone = null;
+            
+            updateCartDisplay();
+            closeCheckout();
+            toggleCart();
+            showSuccess('Order placed successfully! You earned ' + Math.floor(total) + ' loyalty points!');
+            
+            // Start order progression simulation
+            simulateOrderProgress(orderData);
+            
+            // Reset form
+            document.getElementById('checkoutForm').reset();
+        }
+
+        function calculateDeliveryTime() {
+            const deliveryTimeSelect = document.getElementById('deliveryTime').value;
+            const now = new Date();
+            
+            switch(deliveryTimeSelect) {
+                case 'asap':
+                    return new Date(now.getTime() + (selectedDeliveryZone ? 30 : 45) * 60000).toLocaleString();
+                case '1hour':
+                    return new Date(now.getTime() + 60 * 60000).toLocaleString();
+                case '2hours':
+                    return new Date(now.getTime() + 120 * 60000).toLocaleString();
+                case '3hours':
+                    return new Date(now.getTime() + 180 * 60000).toLocaleString();
+                case 'tomorrow':
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(9, 0, 0, 0);
+                    return tomorrow.toLocaleString();
+                default:
+                    return new Date(now.getTime() + 45 * 60000).toLocaleString();
+            }
+        }
+
+        // Order tracking functionality
+        function simulateOrderProgress(order) {
+            // Simulate order progression
+            setTimeout(() => {
+                order.status = 'preparing';
+                order.trackingSteps[1].completed = true;
+                order.trackingSteps[1].time = new Date().toLocaleString();
+                displayOrders();
+                displayAdminOrders();
+            }, 5000); // 5 seconds
+
+            setTimeout(() => {
+                order.status = 'out_for_delivery';
+                order.trackingSteps[2].completed = true;
+                order.trackingSteps[2].time = new Date().toLocaleString();
+                displayOrders();
+                displayAdminOrders();
+            }, 15000); // 15 seconds
+
+            setTimeout(() => {
+                order.status = 'delivered';
+                order.trackingSteps[3].completed = true;
+                order.trackingSteps[3].time = new Date().toLocaleString();
+                displayOrders();
+                displayAdminOrders();
+            }, 30000); // 30 seconds
+        }
+
+        function showOrderTracking(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const content = `
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <h4 class="text-lg font-semibold">Order #${order.id}</h4>
+                        <p class="text-gray-600">Estimated delivery: ${order.estimatedDelivery}</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        ${order.trackingSteps.map((step, index) => `
+                            <div class="flex items-center space-x-4">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center ${step.completed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}">
+                                    ${step.completed ? '✓' : index + 1}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium ${step.completed ? 'text-green-600' : 'text-gray-500'}">${step.step}</div>
+                                    ${step.time ? `<div class="text-sm text-gray-500">${step.time}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-medium mb-2">Order Details:</h5>
+                        <div class="space-y-1 text-sm">
+                            ${order.items.map(item => `
+                                <div class="flex justify-between">
+                                    <span>${item.name} (${item.size}) x${item.quantity}</span>
+                                    <span>₱${(item.price * item.quantity).toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                            <div class="border-t pt-2 font-medium">
+                                <div class="flex justify-between">
+                                    <span>Total:</span>
+                                    <span>₱${order.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('trackingContent').innerHTML = content;
+            document.getElementById('trackingModal').classList.remove('hidden');
+            document.getElementById('trackingModal').classList.add('flex');
+        }
+
+        function closeTrackingModal() {
+            document.getElementById('trackingModal').classList.add('hidden');
+            document.getElementById('trackingModal').classList.remove('flex');
+        }
+
+        // Enhanced order display
+        function displayOrders() {
+            const container = document.getElementById('ordersList');
+            
+            if (!currentUser) {
+                container.innerHTML = '<p class="text-gray-500 text-center">Please log in to view your orders.</p>';
+                return;
+            }
+            
+            // Filter orders for current user (in a real app, this would be done server-side)
+            const userOrders = currentUser.role === 'admin' || currentUser.role === 'staff' 
+                ? orders 
+                : orders.filter(order => order.customer.phone === currentUser.phone);
+            
+            if (userOrders.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No orders yet</p>';
+                return;
+            }
+            
+            container.innerHTML = userOrders.map(order => `
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">Order #${order.id}</h3>
+                            <p class="text-gray-600">${order.orderDate}</p>
+                            ${order.deliveryZone ? `<p class="text-sm text-gray-500">${order.deliveryZone.name}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <span class="px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}">
+                                ${getStatusText(order.status)}
+                            </span>
+                            <button onclick="showOrderTracking(${order.id})" class="block mt-2 text-blue-600 hover:text-blue-800 text-sm">
+                                Track Order 📍
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-medium mb-2">Items:</h4>
+                        ${order.items.map(item => `
+                            <div class="flex justify-between text-sm">
+                                <span>${item.name} (${item.size}) x${item.quantity}</span>
+                                <span>₱${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t">
+                        <span class="font-semibold">Total: ₱${order.total.toFixed(2)}</span>
+                        <div class="text-right">
+                            <div class="text-sm text-gray-600">Est. Delivery: ${order.estimatedDelivery}</div>
+                            <button onclick="reorderItems(${order.id})" class="mt-1 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                                Reorder
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function reorderItems(orderId) {
+            if (!currentUser) {
+                showSuccess('Please log in to reorder items.');
+                showLoginModal();
+                return;
+            }
+
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            order.items.forEach(item => {
+                const existingItem = cart.find(cartItem => 
+                    cartItem.id === item.id && 
+                    cartItem.size === item.size && 
+                    JSON.stringify(cartItem.addOns) === JSON.stringify(item.addOns)
+                );
+                
+                if (existingItem) {
+                    existingItem.quantity += item.quantity;
+                } else {
+                    cart.push({ ...item });
+                }
+            });
+            
+            updateCartDisplay();
+            showSuccess('Items added to cart from previous order!');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'confirmed': 'Confirmed',
+                'preparing': 'Preparing',
+                'out_for_delivery': 'Out for Delivery',
+                'delivered': 'Delivered',
+                'cancelled': 'Cancelled'
+            };
+            return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
+        }
+
+        // Enhanced admin functions
+        function displayAdminOrders() {
+            const container = document.getElementById('adminOrders');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No orders to manage</p>';
+                return;
+            }
+            
+            container.innerHTML = orders.map(order => `
+                <div class="border rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold">Order #${order.id}</h4>
+                            <p class="text-sm text-gray-600">${order.customer.name} - ${order.customer.phone}</p>
+                            <p class="text-sm text-gray-600">${order.customer.address}</p>
+                            ${order.deliveryZone ? `<p class="text-xs text-gray-500">${order.deliveryZone.name} - ${order.deliveryZone.estimatedTime}</p>` : ''}
+                        </div>
+                        <span class="text-lg font-bold text-green-600">₱${order.total.toFixed(2)}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <select onchange="updateOrderStatus(${order.id}, this.value)" class="border rounded px-2 py-1 text-sm">
+                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                            <option value="out_for_delivery" ${order.status === 'out_for_delivery' ? 'selected' : ''}>Out for Delivery</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                        <button onclick="showOrderTracking(${order.id})" class="text-blue-600 hover:text-blue-800 text-sm">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = newStatus;
+                
+                // Update tracking steps based on status
+                const statusIndex = ['confirmed', 'preparing', 'out_for_delivery', 'delivered'].indexOf(newStatus);
+                if (statusIndex > -1) {
+                    for (let i = 0; i <= statusIndex; i++) {
+                        if (!order.trackingSteps[i].completed) {
+                            order.trackingSteps[i].completed = true;
+                            order.trackingSteps[i].time = new Date().toLocaleString();
+                        }
+                    }
+                }
+                
+                displayAdminOrders();
+                displayOrders();
+                showSuccess('Order status updated!');
+            }
+        }
+
+        // Inventory management
+        function displayInventory() {
+            const container = document.getElementById('inventoryList');
+            
+            container.innerHTML = menuItems.map(item => `
+                <div class="flex justify-between items-center p-3 border rounded-lg">
+                    <div>
+                        <h4 class="font-semibold">${item.name}</h4>
+                        <p class="text-sm text-gray-600">Stock: ${item.stock} units</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="updateStock(${item.id}, -1)" class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm hover:bg-red-200">-</button>
+                        <span class="w-8 text-center">${item.stock}</span>
+                        <button onclick="updateStock(${item.id}, 1)" class="bg-green-100 text-green-600 px-2 py-1 rounded text-sm hover:bg-green-200">+</button>
+                        <button onclick="restockItem(${item.id})" class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm hover:bg-blue-200">Restock</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStock(itemId, change) {
+            const item = menuItems.find(i => i.id === itemId);
+            if (item) {
+                item.stock = Math.max(0, item.stock + change);
+                displayInventory();
+                displayMenuItems();
+                showSuccess('Stock updated!');
+            }
+        }
+
+        function restockItem(itemId) {
+            const item = menuItems.find(i => i.id === itemId);
+            if (item) {
+                item.stock = 50; // Restock to 50 units
+                displayInventory();
+                displayMenuItems();
+                showSuccess(`${item.name} restocked to 50 units!`);
+            }
+        }
+
+        // Admin analytics
+        function updateAdminStats() {
+            const todayOrders = orders.filter(order => {
+                const orderDate = new Date(order.orderDate);
+                const today = new Date();
+                return orderDate.toDateString() === today.toDateString();
+            });
+            
+            const todaySales = todayOrders.reduce((sum, order) => sum + order.total, 0);
+            const avgOrderValue = orders.length > 0 ? orders.reduce((sum, order) => sum + order.total, 0) / orders.length : 0;
+            
+            document.getElementById('todaySales').textContent = `₱${todaySales.toFixed(2)}`;
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('activeCustomers').textContent = users.filter(u => u.role === 'customer').length;
+            document.getElementById('avgOrderValue').textContent = `₱${avgOrderValue.toFixed(2)}`;
+        }
+
+        function initSalesChart() {
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+            
+            // Generate sample data for the last 7 days
+            const labels = [];
+            const data = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+                data.push(Math.floor(Math.random() * 2000) + 500); // Random sales data
+            }
+            
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Sales (₱)',
+                        data: data,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // User management functions
+        function displayUsers() {
+            const container = document.getElementById('usersList');
+            
+            container.innerHTML = users.map(user => `
+                <div class="flex justify-between items-center p-3 border rounded-lg">
+                    <div>
+                        <h4 class="font-semibold">${user.name}</h4>
+                        <p class="text-sm text-gray-600">${user.email} - ${user.phone}</p>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span class="text-xs px-2 py-1 rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : user.role === 'staff' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">${user.role}</span>
+                            <span class="text-xs text-gray-500">Orders: ${user.totalOrders}</span>
+                            <span class="text-xs text-gray-500">Points: ${user.loyaltyPoints}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="toggleUserStatus(${user.id})" class="text-sm px-3 py-1 rounded ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${user.status}
+                        </button>
+                        <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-700">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAddUserForm() {
+            document.getElementById('addUserModal').classList.remove('hidden');
+            document.getElementById('addUserModal').classList.add('flex');
+        }
+
+        function closeAddUser() {
+            document.getElementById('addUserModal').classList.add('hidden');
+            document.getElementById('addUserModal').classList.remove('flex');
+        }
+
+        function addUser(event) {
+            event.preventDefault();
+            
+            const newUser = {
+                id: userIdCounter++,
+                name: document.getElementById('newUserName').value,
+                email: document.getElementById('newUserEmail').value,
+                phone: document.getElementById('newUserPhone').value,
+                role: document.getElementById('newUserRole').value,
+                status: 'active',
+                loyaltyPoints: 0,
+                totalOrders: 0,
+                favoriteItems: [],
+                password: 'password123' // Default password
+            };
+            
+            users.push(newUser);
+            displayUsers();
+            closeAddUser();
+            showSuccess('User added successfully!');
+            
+            // Reset form
+            document.getElementById('addUserForm').reset();
+        }
+
+        function toggleUserStatus(userId) {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.status = user.status === 'active' ? 'inactive' : 'active';
+                displayUsers();
+                showSuccess('User status updated!');
+            }
+        }
+
+        function deleteUser(userId) {
+            users = users.filter(u => u.id !== userId);
+            displayUsers();
+            showSuccess('User deleted successfully!');
+        }
+
+        // Utility functions
+        function getStatusColor(status) {
+            const colors = {
+                confirmed: 'bg-blue-100 text-blue-800',
+                preparing: 'bg-yellow-100 text-yellow-800',
+                out_for_delivery: 'bg-purple-100 text-purple-800',
+                delivered: 'bg-green-100 text-green-800',
+                cancelled: 'bg-red-100 text-red-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function updateUserPoints() {
+            const points = currentUser ? currentUser.loyaltyPoints : 0;
+            document.getElementById('userPoints').textContent = points;
+            document.getElementById('cartLoyaltyPoints').textContent = points;
+        }
+
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            successText.textContent = message;
+            successMsg.classList.remove('hidden');
+            setTimeout(() => {
+                successMsg.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Initialize the app when page loads
+        init();
+    </script>
+</body>
+</html>
